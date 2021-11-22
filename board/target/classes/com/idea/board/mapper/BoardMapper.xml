@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<!DOCTYPE mapper
+  PUBLIC "-//mybatis.org//DTD Mapper 3.0//EN"
+  "http://mybatis.org/dtd/mybatis-3-mapper.dtd">
+<mapper namespace="com.idea.board.mapper.BoardMapper">
+
+	<select id="getList" resultType="com.idea.board.dto.BoardVO">
+	<![CDATA[
+		select * from board where
+		no > 0 and rownum <= 100
+		]]>
+	</select>
+
+	<insert id="insert">
+		insert into board (no,title,content,writer)
+		values (seq_board.nextval, #{title}, #{content}, #{writer})
+	</insert>
+
+	<insert id="insertSelectKey">
+
+		<selectKey keyProperty="no" order="BEFORE"
+			resultType="long">
+			select seq_board.nextval from dual
+		</selectKey>
+
+		insert into board (no,title,content, writer)
+		values (#{no}, #{title}, #{content}, #{writer})
+	</insert>
+
+	<select id="read" resultType="com.idea.board.dto.BoardVO">
+		select * from board where no = #{no}
+	</select>
+
+	<delete id="delete">
+		delete board where no = #{no}
+	</delete>
+	
+	<update id="update">
+		update board
+		set title= #{title},
+		content=#{content},
+		writer = #{writer},
+		updateDate = sysdate
+		where no = #{no}
+	</update>
+
+	<sql id="boardPaging">
+		 <trim prefix="(" suffix=") AND " prefixOverrides="OR">
+			<foreach item='type' collection="typeArr">
+				<trim prefix="OR">
+					<choose>
+						<when test="type == 'T'.toString()">
+							title like '%'||#{keyword}||'%'
+						</when>
+						<when test="type == 'C'.toString()">
+							content like '%'||#{keyword}||'%'
+						</when>
+						<when test="type == 'W'.toString()">
+							writer like '%'||#{keyword}||'%'
+						</when>
+						<when test="type == 'R'.toString()">
+							regdate like '%'||#{keyword}||'%'
+						</when>
+					</choose>
+				</trim>
+			</foreach>
+		</trim>
+	</sql>
+
+	<select id="getListWithPaging" resultType="com.idea.board.dto.BoardVO">
+		<![CDATA[
+		select
+		 no, title, content, writer, regdate, updatedate 
+		from (
+			select /*+INDEX_DESC(board PK_board) */
+		 	 rownum rn, no, title, content, writer, regdate, updatedate from board where
+		]]>
+		<include refid="boardPaging"></include>
+		<![CDATA[
+			rownum <= #{pageNum} * #{amount}
+			)
+		where rn > (#{pageNum} -1) * #{amount}
+		]]>
+	</select>
+	
+	<select id="getTotalCount" resultType="int">
+		select count(*) from board where
+		 <include refid="boardPaging"></include>
+		no > 0
+	</select>
+
+</mapper>
