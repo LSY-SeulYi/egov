@@ -92,7 +92,7 @@
 					</tr>
 					<tr>
 						<td>WRITER</td>
-						<td colspan="2"><%= bbs.getBbsTitle() %></td>
+						<td colspan="2"><%= bbs.getUserID() %></td>
 					</tr>
 					<tr>
 						<td>DATE</td>
